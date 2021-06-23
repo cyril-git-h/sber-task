@@ -1,5 +1,10 @@
 import React, { useState } from "react";
 import "./App.css";
+import { ReactComponent as EditButton } from "./edit.svg";
+import { ReactComponent as CheckMark } from "./checkmark.svg";
+import { ReactComponent as AddButton } from "./add.svg";
+import marked from "marked";
+import DOMPurify from "dompurify";
 
 function Note({
   setNote,
@@ -41,10 +46,13 @@ function Note({
     }));
   }
 
+  let [edit, setEdit] = useState(false);
+  let [input, setInput] = useState("");
+  let [text, setText] = useState("");
+
   return (
     <div
       onMouseDown={(e) => {
-        e.preventDefault();
         let target = e.target as HTMLElement;
         setNote((prev: NoteI) => ({
           ...prev,
@@ -95,7 +103,35 @@ function Note({
         }}
         className="d"
       ></div>
-      ijfhrihei
+      <CheckMark
+        style={{ display: edit ? "block" : "none" }}
+        onClick={() => {
+          setEdit(false);
+          let cleanInput = DOMPurify.sanitize(input, {
+            USE_PROFILES: { html: false, svg: false, mathMl: false },
+          });
+          setText(cleanInput);
+        }}
+      />
+      <EditButton
+        style={{ display: edit ? "none" : "block" }}
+        onClick={() => {
+          setEdit(true);
+        }}
+      />
+      <textarea
+        style={{ display: edit ? "block" : "none" }}
+        className="text-area"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Кликните два раза, чтобы ввести текст"
+      ></textarea>
+      <span
+        onMouseDown={(e) => e.preventDefault()}
+        style={{ display: edit ? "none" : "block" }}
+        className="note-text"
+        dangerouslySetInnerHTML={{ __html: marked(text) }}
+      ></span>
     </div>
   );
 }
@@ -159,6 +195,7 @@ function App() {
           }
         }}
         onMouseMove={(e) => {
+          e.preventDefault();
           if (note.parentElement) {
             switch (note.focus) {
               case "a":
@@ -197,7 +234,7 @@ function App() {
           }));
         }}
       >
-        <Note setNote={setNote} />
+        <AddButton />
         <Note setNote={setNote} />
         <Note setNote={setNote} />
       </div>
