@@ -69,6 +69,13 @@ a {
   transform: translateX(-50%);
   cursor: pointer;
 }
+#delete {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: -50px;
+  cursor: pointer;
+}
 
 .a,
 .b,

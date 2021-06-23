@@ -1,14 +1,24 @@
-import React, { useState } from "react";
+import React, { useCallback, useReducer, useState } from "react";
 import "./App.css";
 import { ReactComponent as EditButton } from "./edit.svg";
 import { ReactComponent as CheckMark } from "./checkmark.svg";
 import { ReactComponent as AddButton } from "./add.svg";
+import { ReactComponent as DeleteButton } from "./delete.svg";
 import marked from "marked";
 import DOMPurify from "dompurify";
+import { useLocalStorage } from "react-use";
 
 function Note({
   setNote,
+  text,
+  id,
+  dispatch,
+  position,
 }: {
+  position: any;
+  dispatch: any;
+  text: string;
+  id: number;
   setNote: (
     value: React.SetStateAction<{
       target: HTMLElement;
@@ -36,7 +46,6 @@ function Note({
   function getPoint(e: React.MouseEvent<HTMLElement>) {
     let target = e.target as HTMLElement;
     let rect = target?.parentElement?.getBoundingClientRect();
-
     setNote((prev: NoteI) => ({
       ...prev,
       target: e.target as HTMLElement,
@@ -48,10 +57,26 @@ function Note({
 
   let [edit, setEdit] = useState(false);
   let [input, setInput] = useState("");
-  let [text, setText] = useState("");
 
   return (
     <div
+      style={{
+        top: position?.top,
+        left: position?.left,
+      }}
+      onMouseUp={(e) => {
+        let target = e.target as HTMLElement;
+        if (target.className === "note") {
+          dispatch({
+            type: "SET POSITION",
+            payload: {
+              id,
+              top: target?.style?.top,
+              left: target?.style?.left,
+            },
+          });
+        }
+      }}
       onMouseDown={(e) => {
         let target = e.target as HTMLElement;
         setNote((prev: NoteI) => ({
@@ -105,20 +130,35 @@ function Note({
       ></div>
       <CheckMark
         style={{ display: edit ? "block" : "none" }}
-        onClick={() => {
+        onClick={(e) => {
           setEdit(false);
           let cleanInput = DOMPurify.sanitize(input, {
             USE_PROFILES: { html: false, svg: false, mathMl: false },
           });
-          setText(cleanInput);
+
+          dispatch({ type: "CHANGE", payload: { id, text: cleanInput } });
+          setInput(cleanInput);
+
+          let target = e.target as HTMLElement;
+          let parent = target?.closest(".note") as HTMLElement;
+          dispatch({
+            type: "SET POSITION",
+            payload: {
+              id,
+              top: parent?.style?.top,
+              left: parent?.style?.left,
+            },
+          });
         }}
       />
       <EditButton
         style={{ display: edit ? "none" : "block" }}
         onClick={() => {
+          setInput(text);
           setEdit(true);
         }}
       />
+      <DeleteButton onClick={() => dispatch({ type: "DELETE", payload: id })} />
       <textarea
         style={{ display: edit ? "block" : "none" }}
         className="text-area"
@@ -130,7 +170,7 @@ function Note({
         onMouseDown={(e) => e.preventDefault()}
         style={{ display: edit ? "none" : "block" }}
         className="note-text"
-        dangerouslySetInnerHTML={{ __html: marked(text) }}
+        dangerouslySetInnerHTML={{ __html: marked(text ?? "") }}
       ></span>
     </div>
   );
@@ -139,6 +179,52 @@ function Note({
 function App() {
   const minWidth = 100;
   const minHeight = 100;
+
+  const initialState = [{ id: 1, text: "", position: {} }];
+  const localStorageKey = "notesStorage";
+
+  function reducer(state: any, action: any) {
+    switch (action.type) {
+      case "ADD":
+        return [...state, { id: state.length + 1, text: "" }];
+      case "CHANGE":
+        return [
+          ...state.filter((note: any) => note.id !== action.payload.id),
+          { id: action.payload.id, text: action.payload.text },
+        ];
+      case "DELETE":
+        return [...state.filter((note: any) => note.id !== action.payload)];
+      case "SET POSITION":
+        return [
+          ...state.filter((note: any) => note.id !== action.payload.id),
+          {
+            id: action.payload.id,
+            position: action.payload,
+            text: state.find((note: any) => note.id === action.payload.id).text,
+          },
+        ];
+      default:
+        return state;
+    }
+  }
+
+  const usePersistReducer = () => {
+    const [savedState, saveState] = useLocalStorage(
+      localStorageKey,
+      initialState
+    );
+    const reducerLocalStorage = useCallback(
+      (state, action) => {
+        const newState = reducer(state, action);
+        saveState(newState);
+        return newState;
+      },
+      [saveState]
+    );
+    return useReducer(reducerLocalStorage, savedState);
+  };
+
+  const [state, dispatch] = usePersistReducer();
 
   const [note, setNote] = useState({
     target: null as unknown as HTMLElement,
@@ -217,7 +303,7 @@ function App() {
             }
             return;
           }
-          setNote((prev) => ({
+          setNote((prev: any) => ({
             ...prev,
             target: e.target as HTMLElement,
           }));
@@ -227,16 +313,24 @@ function App() {
           }
         }}
         onMouseUp={() => {
-          setNote((prev) => ({
+          setNote((prev: any) => ({
             ...prev,
             isNote: false,
             parentElement: null,
           }));
         }}
       >
-        <AddButton />
-        <Note setNote={setNote} />
-        <Note setNote={setNote} />
+        <AddButton onClick={() => dispatch({ type: "ADD" })} />
+        {state.map((note: any) => (
+          <Note
+            key={note.id}
+            id={note.id}
+            dispatch={dispatch}
+            position={note.position}
+            text={note.text}
+            setNote={setNote}
+          />
+        ))}
       </div>
     </div>
   );
