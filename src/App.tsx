@@ -282,6 +282,8 @@ function App() {
   let [snameInput, setsNameInput] = useState("");
   let [rnameInput, setrNameInput] = useState("");
   let [errMessage, setErrMessage] = useState("");
+  const SAVE_API = "";
+  const RESTORE_API = "";
 
   return (
     <div className="App">
@@ -357,7 +359,7 @@ function App() {
             onSubmit={(e) => {
               e.preventDefault();
               axios
-                .post("http://localhost:5000/api/save", {
+                .post(SAVE_API, {
                   data: { snameInput, state },
                 })
                 .then((res) => setErrMessage(res.data))
@@ -379,7 +381,7 @@ function App() {
               onSubmit={(e) => {
                 e.preventDefault();
                 axios
-                  .post("http://localhost:5000/api/restore", {
+                  .post(RESTORE_API, {
                     data: { rnameInput },
                   })
                   .then((res) => {
