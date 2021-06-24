@@ -7,6 +7,8 @@ import { ReactComponent as DeleteButton } from "./delete.svg";
 import marked from "marked";
 import DOMPurify from "dompurify";
 import { useLocalStorage } from "react-use";
+import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
 
 function Note({
   setNote,
@@ -18,7 +20,7 @@ function Note({
   position: any;
   dispatch: any;
   text: string;
-  id: number;
+  id: string;
   setNote: (
     value: React.SetStateAction<{
       target: HTMLElement;
@@ -28,7 +30,7 @@ function Note({
       isNote: boolean;
       right: number;
       bottom: number;
-      parentElement: any;
+      parentElement: HTMLElement | null;
     }>
   ) => void;
 }) {
@@ -40,7 +42,7 @@ function Note({
     isNote: boolean;
     right: number;
     bottom: number;
-    parentElement: any;
+    parentElement: HTMLElement | null;
   };
 
   function getPoint(e: React.MouseEvent<HTMLElement>) {
@@ -164,7 +166,7 @@ function Note({
         className="text-area"
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        placeholder="Кликните два раза, чтобы ввести текст"
+        placeholder="Кликните, чтобы ввести текст"
       ></textarea>
       <span
         onMouseDown={(e) => e.preventDefault()}
@@ -186,7 +188,7 @@ function App() {
   function reducer(state: any, action: any) {
     switch (action.type) {
       case "ADD":
-        return [...state, { id: state.length + 1, text: "" }];
+        return [...state, { id: uuidv4(), text: "" }];
       case "CHANGE":
         return [
           ...state.filter((note: any) => note.id !== action.payload.id),
@@ -203,6 +205,8 @@ function App() {
             text: state.find((note: any) => note.id === action.payload.id).text,
           },
         ];
+      case "GET SESSION":
+        return [...action.payload];
       default:
         return state;
     }
@@ -264,6 +268,21 @@ function App() {
     }
   }
 
+  type NoteI = {
+    target: HTMLElement;
+    focus: string;
+    distX: number;
+    distY: number;
+    isNote: boolean;
+    right: number;
+    bottom: number;
+    parentElement: HTMLElement | null;
+  };
+
+  let [snameInput, setsNameInput] = useState("");
+  let [rnameInput, setrNameInput] = useState("");
+  let [errMessage, setErrMessage] = useState("");
+
   return (
     <div className="App">
       <div
@@ -303,7 +322,7 @@ function App() {
             }
             return;
           }
-          setNote((prev: any) => ({
+          setNote((prev: NoteI) => ({
             ...prev,
             target: e.target as HTMLElement,
           }));
@@ -313,7 +332,7 @@ function App() {
           }
         }}
         onMouseUp={() => {
-          setNote((prev: any) => ({
+          setNote((prev: NoteI) => ({
             ...prev,
             isNote: false,
             parentElement: null,
@@ -331,6 +350,60 @@ function App() {
             setNote={setNote}
           />
         ))}
+        <div className="save-session">
+          <span style={{ color: "red" }}>{errMessage}</span>
+          <h1>Сохранить сессию</h1>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              axios
+                .post("http://localhost:5000/api/save", {
+                  data: { snameInput, state },
+                })
+                .then((res) => setErrMessage(res.data))
+                .catch((err) => setErrMessage(err.message));
+              setsNameInput("");
+            }}
+          >
+            <input
+              value={snameInput}
+              onChange={(e) => setsNameInput(e.target.value)}
+              placeholder="Введите уникальное имя"
+              type="text"
+            />
+            <button type="submit">OK</button>
+          </form>
+          <div className="restore-session">
+            <h1>Восстановить сессию</h1>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                axios
+                  .post("http://localhost:5000/api/restore", {
+                    data: { rnameInput },
+                  })
+                  .then((res) => {
+                    if (res.data === "Такого пользователя нет") {
+                      setErrMessage(res.data);
+                      return;
+                    }
+                    setErrMessage("Oк");
+                    return dispatch({ type: "GET SESSION", payload: res.data });
+                  })
+                  .catch((err) => setErrMessage(err.message));
+                setrNameInput("");
+              }}
+            >
+              <input
+                value={rnameInput}
+                onChange={(e) => setrNameInput(e.target.value)}
+                placeholder="Введите имя"
+                type="text"
+              />
+              <button type="submit">OK</button>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   );
