@@ -1,0 +1,26 @@
+{
+  "files": {
+    "main.css": "/sber-task/static/css/main.7f74080d.chunk.css",
+    "main.js": "/sber-task/static/js/main.1c5e2642.chunk.js",
+    "main.js.map": "/sber-task/static/js/main.1c5e2642.chunk.js.map",
+    "runtime-main.js": "/sber-task/static/js/runtime-main.cb5afdae.js",
+    "runtime-main.js.map": "/sber-task/static/js/runtime-main.cb5afdae.js.map",
+    "static/js/2.d47c4012.chunk.js": "/sber-task/static/js/2.d47c4012.chunk.js",
+    "static/js/2.d47c4012.chunk.js.map": "/sber-task/static/js/2.d47c4012.chunk.js.map",
+    "static/js/3.3ee3cf7d.chunk.js": "/sber-task/static/js/3.3ee3cf7d.chunk.js",
+    "static/js/3.3ee3cf7d.chunk.js.map": "/sber-task/static/js/3.3ee3cf7d.chunk.js.map",
+    "index.html": "/sber-task/index.html",
+    "static/css/main.7f74080d.chunk.css.map": "/sber-task/static/css/main.7f74080d.chunk.css.map",
+    "static/js/2.d47c4012.chunk.js.LICENSE.txt": "/sber-task/static/js/2.d47c4012.chunk.js.LICENSE.txt",
+    "static/media/add.78415e28.svg": "/sber-task/static/media/add.78415e28.svg",
+    "static/media/checkmark.6b886b62.svg": "/sber-task/static/media/checkmark.6b886b62.svg",
+    "static/media/delete.fb4bbc43.svg": "/sber-task/static/media/delete.fb4bbc43.svg",
+    "static/media/edit.230abc44.svg": "/sber-task/static/media/edit.230abc44.svg"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.cb5afdae.js",
+    "static/js/2.d47c4012.chunk.js",
+    "static/css/main.7f74080d.chunk.css",
+    "static/js/main.1c5e2642.chunk.js"
+  ]
+}
